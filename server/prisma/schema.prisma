@@ -1,11 +1,19 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+}
+
+model Team {
+  id                   Int           @id @default(autoincrement())
+  teamName             String        @unique
+  productOwnerUserId   Int?
+  projectManagerUserId Int?
+  projectTeams         ProjectTeam[]
+  userTeams            UserTeam[]
 }
 
 model Project {
@@ -14,42 +22,37 @@ model Project {
   description  String?
   startDate    DateTime?
   dueDate      DateTime?
-  tasks        Task[]
   projectTeams ProjectTeam[]
-  activityLogs ActivityLog[]
+  tasks        Task[]
 }
 
-model Team {
-  id                   Int           @id @default(autoincrement())
-  teamName             String
-  productOwnerUserId   Int?
-  projectManagerUserId Int?
-  users                User[]
-  projectTeams         ProjectTeam[]
+model User {
+  id                Int          @id @default(autoincrement())
+  cognitoId         String       @unique
+  username          String       @unique
+  email             String       @unique
+  profilePictureUrl String?
+  userTeams         UserTeam[]
+  authoredTasks     Task[]       @relation("TaskAuthor")
+  assignedTasks     Task[]       @relation("TaskAssignee")
+  attachments       Attachment[]
+  comments          Comment[]
 }
 
 model ProjectTeam {
   id        Int     @id @default(autoincrement())
-  projectId Int
   teamId    Int
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
   team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  userId            Int            @id @default(autoincrement())
-  cognitoId         String         @unique
-  username          String
-  email             String
-  profilePictureUrl String?
-  teamId            Int?
-  team              Team?          @relation(fields: [teamId], references: [id])
-  notifications     Notification[]
-  activityLogs      ActivityLog[]
-  authoredTasks     Task[]         @relation("TaskAuthor")
-  assignedTasks     Task[]         @relation("TaskAssignee")
-  comments          Comment[]
-  attachments       Attachment[]
+model UserTeam {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  teamId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
 model Task {
@@ -66,47 +69,27 @@ model Task {
   authorUserId   Int
   assignedUserId Int?
   project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  author         User         @relation("TaskAuthor", fields: [authorUserId], references: [userId], onDelete: Cascade)
-  assignee       User?        @relation("TaskAssignee", fields: [assignedUserId], references: [userId], onDelete: SetNull)
-  comments       Comment[]
+  author         User         @relation("TaskAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  assignee       User?        @relation("TaskAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
   attachments    Attachment[]
-}
-
-model Comment {
-  id        Int      @id @default(autoincrement())
-  text      String
-  taskId    Int
-  userId    Int
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  comments       Comment[]
 }
 
 model Attachment {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   fileUrl      String
-  fileName     String
+  fileName     String?
   taskId       Int
   uploadedById Int
-  task         Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user         User   @relation(fields: [uploadedById], references: [userId], onDelete: Cascade)
+  task         Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy   User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
 }
 
-model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-}
-
-model ActivityLog {
-  id        Int      @id @default(autoincrement())
-  projectId Int
-  userId    Int
-  action    String
-  details   String
-  createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+model Comment {
+  id     Int    @id @default(autoincrement())
+  text   String
+  taskId Int
+  userId Int
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
