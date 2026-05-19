@@ -6,8 +6,8 @@ import DashboardWrapper from "./dashboardWrapper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Nexus | Enterprise Project Management Hub",
-  description: "Advanced data-driven tracking, columns kanban boards, and workflow management systems.",
+  title: "Project Management App",
+  description: "Manage your tasks and projects seamlessly",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
         <DashboardWrapper>{children}</DashboardWrapper>
       </body>
