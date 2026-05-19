@@ -45,6 +45,13 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { taskId }) => [{ type: "Tasks", id: taskId }],
     }),
+    deleteTask: build.mutation<any, { taskId: number }>({
+      query: ({ taskId }) => ({
+        url: `tasks/${taskId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
     getUsers: build.query<any[], void>({
       query: () => "users",
       providesTags: ["Users"],
@@ -62,6 +69,7 @@ export const {
   useGetTasksQuery,
   useCreateTaskMutation,
   useUpdateTaskStatusMutation,
+  useDeleteTaskMutation, // Added this back right here
   useGetUsersQuery,
   useGetTeamsQuery,
 } = api;
